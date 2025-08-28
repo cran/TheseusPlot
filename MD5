@@ -1,0 +1,17 @@
+4c5698edbc6fb97ec576951e6041cc5d *DESCRIPTION
+5ed205dbf58bac7cd07591f551f0e0bf *LICENSE
+584d3b4a1edeb263906babbbed12a481 *NAMESPACE
+0ea41141a4c50ff0b45850bddd6c096a *NEWS.md
+f114ba43ff2da02281054b643ad5cce6 *R/create_ship.R
+85fbb129a07992e1537995af3e49281f *R/ship_of_theseus.R
+7559c4fd41d51750a9ba9c0f08ccbfa8 *R/utils.R
+ff6cf16f12caaed10f91e5f23f83d7a0 *README.md
+f733f373f6c6bbd52d68f7df1f4442e9 *man/ShipOfTheseus.Rd
+35658c6796c8f6db8ca16a927bd13d12 *man/continuous_config.Rd
+9249fcdc317fd5a42bbe5fc8921061f4 *man/create_ship.Rd
+11ea0eb6801df1539e45c338672679c7 *man/figures/README-overview-1.png
+32371280553c020f51ccf4cffe65d933 *man/figures/README-plot_carrier-1.png
+3e0799ab90d8d0f9b6a736cc46bdc604 *man/figures/README-plot_dep_delay-1.png
+1c0a7bf601bb9dd1ad0bfab532531813 *man/figures/README-plot_dep_delay_n-1.png
+5122e023fdba42f56bb314c56f2f29cd *man/figures/README-plot_origin-1.png
+2f36ec4dce8dd6f701d78da11a6224c8 *man/figures/README-prot_carrier_n-1.png
