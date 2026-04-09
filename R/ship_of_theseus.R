@@ -4,10 +4,11 @@ NULL
 #' An R6 Class for Generating Theseus Plot
 #'
 #' @description
-#' The `ShipOfTheseus` class decomposes the difference in outcome rates between
-#' two datasets and visualizes the results as a Theseus Plot. It provides methods
-#' to compute contributions of individual attributes, summarize results in tables,
-#' and generate waterfall-style plots for intuitive interpretation.
+#' The \code{ShipOfTheseus} class decomposes the difference in outcome rates
+#' between two datasets and visualizes the results as a Theseus Plot. It
+#' provides methods to compute contributions of individual attributes, summarize
+#' results in tables, and generate waterfall-style plots for intuitive
+#' interpretation.
 #'
 #' @import dplyr ggplot2 stringr
 #'
@@ -24,61 +25,69 @@ ShipOfTheseus <- R6::R6Class(
     compute_size = NULL,
     ylab = NULL,
     digits = NULL,
-    text_size = NULL
+    text_size = NULL,
+    
+    #' @importFrom forcats fct_na_value_to_level
+    #' @importFrom tidyr replace_na
+    prepare_input_data = function(data, outcome) {
+      data |>
+        # Fill missing values while preserving column types, since downstream
+        # table()/plot() handle character and factor columns differently
+        mutate(
+          across(where(is.character), \(x) replace_na(x, "(Missing)")),
+          across(where(is.factor), \(x) fct_na_value_to_level(x, level = "(Missing)"))
+        ) |>
+        # Standardize the outcome column name for internal use
+        rename(.outcome = all_of(outcome))
+    }
   ),
 
   public = list(
     #' @description
-    #' The constructor of the ShipOfTheseus class.
+    #' The constructor of the \code{ShipOfTheseus} class.
     #'
-    #' @param data1 data frame representing the first group (e.g., the baseline or
-    #'   "original" data).
-    #' @param data2 data frame representing the second group (e.g., the comparison
-    #'   or "refitted" data).
-    #' @param outcome string specifying the outcome variable used to compute the rate
-    #'   metric (default is "y"). Typically, this is a binary indicator (e.g., 0/1)
-    #'   that is aggregated to form rates.
+    #' @param data1 data frame representing the first group (e.g., the baseline
+    #'   or "original" data).
+    #' @param data2 data frame representing the second group (e.g., the
+    #'   comparison or "refitted" data).
+    #' @param outcome string specifying the outcome variable used to compute the
+    #'   rate metric (default is \code{"y"}). Typically, this is a binary
+    #'   indicator (e.g., 0/1) that is aggregated to form rates.
     #' @param labels character vector of length 2 giving the labels for the two
-    #'   groups. The first corresponds to `data1`, the second to `data2`. Default is
-    #'   c("Original", "Refitted").
-    #' @param ylab string specifying the y-axis label for plots. If NULL (default),
-    #'   no label is displayed.
+    #'   groups. The first corresponds to \code{data1}, the second to
+    #'   \code{data2}. Default is \code{c("Original", "Refitted")}.
+    #' @param ylab string specifying the y-axis label for plots. If \code{NULL}
+    #'   (default), no label is displayed.
     #' @param digits integer indicating the number of decimal places to use for
-    #'   displaying numeric values (default is 3).
-    #' @param text_size numeric value specifying the relative size of text elements
-    #'   in plots (default is 1).
+    #'   displaying numeric values (default is \code{3}).
+    #' @param text_size numeric value specifying the relative size of text
+    #'   elements in plots (default is \code{1}).
     #'
-    #' @return A ShipOfTheseus object, which can be used with \code{plot()} to
-    #'   create Theseus plots.
+    #' @return A \code{ShipOfTheseus} object, which can be used with
+    #'   \code{plot()} to create Theseus plots.
     #'
-    #' @importFrom forcats fct_na_value_to_level
+    #' @importFrom forcats fct_c fct_na_value_to_level
     #' @importFrom memoise memoise
     #' @importFrom tibble tibble
     #' @importFrom tidyr replace_na
     initialize = function(data1, data2, outcome, labels, ylab, digits, text_size) {
       outcome <- rlang::quo_squash(outcome) |> rlang::as_string()
 
-      data1 <- data1 |>
-        mutate_if(is.character, ~ fct_na_value_to_level(.x, level = "(Missing)") |> as.character()) |>
-        mutate_if(is.factor, ~ fct_na_value_to_level(.x, level = "(Missing)")) |>
-        rename(.outcome = !!rlang::sym(outcome))
-      data2 <- data2 |>
-        mutate_if(is.character, ~ fct_na_value_to_level(.x, level = "(Missing)") |> as.character()) |>
-        mutate_if(is.factor, ~ fct_na_value_to_level(.x, level = "(Missing)")) |>
-        rename(.outcome = !!rlang::sym(outcome))
+      data1 <- private$prepare_input_data(data1, outcome)
+      data2 <- private$prepare_input_data(data2, outcome)
 
       private$labels <- labels
       private$ylab <- ylab
       private$digits <- digits
       private$text_size <- text_size
 
-      private$compute_scores <- memoise::memoise(function(column_name) {
+      private$compute_scores <- memoise(function(column_name) {
         score1 <- data1 |> summarise(score = mean(.outcome)) |> pull(score)
         score2 <- data2 |> summarise(score = mean(.outcome)) |> pull(score)
         c(score1, score2)
       })
 
-      private$to_factor <- memoise::memoise(function(column_name, continuous) {
+      private$to_factor <- memoise(function(column_name, continuous) {
         if (is.null(continuous$breaks)) {
           values <- c(data1[[column_name]], data2[[column_name]])
           break_num <- continuous$n
@@ -104,7 +113,7 @@ ShipOfTheseus <- R6::R6Class(
                 group_by(x) |>
                 summarise(y = mean(y)) |>
                 mutate(diff1 = abs(lead(y) - y))
-              data2_tmp <- d1 |>
+              data2_tmp <- d2 |>
                 mutate(x = cut(x, breaks = breaks, include.lowest = TRUE)) |>
                 group_by(x) |>
                 summarise(y = mean(y)) |>
@@ -137,7 +146,7 @@ ShipOfTheseus <- R6::R6Class(
         list(df1, df2)
       })
 
-      private$compute_contribution <- memoise::memoise(function(column_name, continuous) {
+      private$compute_contribution <- memoise(function(column_name, continuous) {
         if (is.numeric(data1[[column_name]])) {
           data_list <- private$to_factor(column_name, continuous)
           data1 <- data_list[[1]]
@@ -158,7 +167,7 @@ ShipOfTheseus <- R6::R6Class(
         score1 <- scores[1]
         score2 <- scores[2]
 
-        result <- tibble::tibble()
+        result <- tibble()
         for (name in names2) {
           df_temp <- df1
           if (name %in% names1) {
@@ -169,7 +178,7 @@ ShipOfTheseus <- R6::R6Class(
 
           score_new <- df_temp |> summarise(score = sum(y) / sum(n)) |> pull(score)
           diff <- score_new - score1
-          res <- tibble::tibble(items = name, amount = diff)
+          res <- tibble(items = name, amount = diff)
           result <- rbind(result, res)
         }
         for (name in names1) {
@@ -182,12 +191,12 @@ ShipOfTheseus <- R6::R6Class(
 
           score_new <- df_temp |> summarise(score = sum(y) / sum(n)) |> pull(score)
           diff <- score2 - score_new
-          res <- tibble::tibble(items = name, amount = diff)
+          res <- tibble(items = name, amount = diff)
           result <- rbind(result, res)
         }
 
         if (is.factor(names1)) {
-          names <- forcats::fct_c(names1, names2)
+          names <- fct_c(names1, names2)
           result <- result |>
             mutate(items = factor(items, levels = levels(names)))
         }
@@ -197,7 +206,7 @@ ShipOfTheseus <- R6::R6Class(
           mutate(contrib = (score2 - score1) * contrib / sum(contrib))
       })
 
-      private$compute_info <- memoise::memoise(function(column_name, continuous) {
+      private$compute_info <- memoise(function(column_name, continuous) {
         if (is.numeric(data1[[column_name]])) {
           data_list <- private$to_factor(column_name, continuous)
           data1 <- data_list[[1]]
@@ -212,10 +221,10 @@ ShipOfTheseus <- R6::R6Class(
           summarise(n2 = n(), x2 = sum(.outcome), rate2 = x2 / n2)
         data1_info |> full_join(data2_info, by = "items") |>
           select(items, starts_with("n"), starts_with("x"), starts_with("rate")) |>
-          tidyr::replace_na(list(n1 = 0L, n2 = 0L, x1 = 0L, x2 = 0L))
+          replace_na(list(n1 = 0L, n2 = 0L, x1 = 0L, x2 = 0L))
       })
 
-      private$compute_size <- memoise::memoise(function(column_name, target, continuous) {
+      private$compute_size <- memoise(function(column_name, target, continuous) {
         if (is.numeric(data1[[column_name]])) {
           data_list <- private$to_factor(column_name, continuous)
           data1 <- data_list[[1]]
@@ -240,7 +249,7 @@ ShipOfTheseus <- R6::R6Class(
             filter(!(!!rlang::sym(column_name) %in% target)) |>
             count() |>
             mutate(type = labels[1], items = other_name)
-          data2_size_other <- data1 |>
+          data2_size_other <- data2 |>
             filter(!(!!rlang::sym(column_name) %in% target)) |>
             count() |>
             mutate(type = labels[2], items = other_name)
@@ -350,12 +359,15 @@ ShipOfTheseus <- R6::R6Class(
         bind_rows(result)|>
         mutate(contrib = round(contrib * 100, digits = private$digits))
 
-      p <- waterfalls::waterfall(
-        result, calc_total = TRUE, total_axis_text = labels[2],
-        total_rect_text_color = "black", total_rect_color = "#00BFC4", rect_text_size = private$text_size)
+      p <- suppressWarnings({
+        waterfalls::waterfall(
+          result, calc_total = TRUE, total_axis_text = labels[2],
+          total_rect_text_color = "black", total_rect_color = "#00BFC4", rect_text_size = private$text_size)
+      })
 
       if (is.null(main_item) & is.null(bar_max_value)) {
-        data_max <- result |> tail(-1) |> filter(abs(contrib) == max(abs(contrib)))
+        data_max <- result |> tail(-1) |> 
+          slice_max(order_by = abs(contrib), n = 1, with_ties = FALSE)
         max_item <- data_max |> pull(items)
         max_amount <- data_max |> pull(contrib) |> abs()
         n_max <- data_size |> filter(items == max_item) |> pull(n) |> max()
@@ -459,7 +471,8 @@ ShipOfTheseus <- R6::R6Class(
       }
 
       if (is.null(main_item) & is.null(bar_max_value)) {
-        data_max <- result |> tail(-1) |> filter(abs(contrib) == max(abs(contrib)))
+        data_max <- result |> tail(-1) |> 
+          slice_max(order_by = abs(contrib), n = 1, with_ties = FALSE)
         max_item <- data_max |> pull(items)
         max_amount <- data_max |> pull(contrib) |> abs()
         n_max <- data_size |> filter(items == max_item) |> pull(n) |> max()

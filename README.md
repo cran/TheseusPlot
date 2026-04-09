@@ -1,10 +1,13 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Theseus Plot: Visualizing Decomposition of Differences in Rate Metrics
+# TheseusPlot: Visualizing Decomposition of Differences in Rate Metrics
 
 <!-- badges: start -->
 
+[![CRAN-version](https://www.r-pkg.org/badges/version/TheseusPlot)](https://cran.r-project.org/package=TheseusPlot)
+[![CRAN-downloads](https://cranlogs.r-pkg.org/badges/TheseusPlot)](https://cran.r-project.org/package=TheseusPlot)
+[![R-CMD-check](https://github.com/hoxo-m/TheseusPlot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hoxo-m/TheseusPlot/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## 1. Overview
@@ -38,7 +41,7 @@ Thus, the contribution of the female group is -0.2 percentage points.
 
 When visualized, the results appear as follows:
 
-![](man/figures/README-overview-1.png)<!-- -->
+<img src="man/figures/README-overview-1.png" alt="" width="500" />
 
 From this plot, we can see that the decline in the metric is primarily
 driven by the male group. We call this visualization the “Theseus Plot.”
@@ -48,7 +51,8 @@ Theseus Plots for various attributes.
 
 ## 2. Installation
 
-You can install the **TheseusPlot** package from CRAN.
+You can install the **TheseusPlot** package from
+[CRAN](https://cran.r-project.org/package=TheseusPlot).
 
 ``` r
 install.packages("TheseusPlot")
@@ -87,7 +91,7 @@ library(nycflights13)
 
 data <- flights |> 
   filter(!is.na(arr_delay)) |>
-  mutate(on_time = arr_delay <= 0) |>  # Arrived on time
+  mutate(on_time = arr_delay <= 15) |>  # Arrived on time
   left_join(airlines, by = "carrier") |>
   mutate(carrier = name) |>  # Convert carrier abbreviations to full names
   select(year, month, day, origin, dest, carrier, dep_delay, on_time)
@@ -96,20 +100,20 @@ data |> head()
 #> # A tibble: 6 × 8
 #>    year month   day origin dest  carrier                dep_delay on_time
 #>   <int> <int> <int> <chr>  <chr> <chr>                      <dbl> <lgl>  
-#> 1  2013     1     1 EWR    IAH   United Air Lines Inc.          2 FALSE  
+#> 1  2013     1     1 EWR    IAH   United Air Lines Inc.          2 TRUE   
 #> 2  2013     1     1 LGA    IAH   United Air Lines Inc.          4 FALSE  
 #> 3  2013     1     1 JFK    MIA   American Airlines Inc.         2 FALSE  
 #> 4  2013     1     1 JFK    BQN   JetBlue Airways               -1 TRUE   
 #> 5  2013     1     1 LGA    ATL   Delta Air Lines Inc.          -6 TRUE   
-#> 6  2013     1     1 EWR    ORD   United Air Lines Inc.         -4 FALSE
+#> 6  2013     1     1 EWR    ORD   United Air Lines Inc.         -4 TRUE
 
 data_Nov <- data |> filter(month == 11)
 data_Dec <- data |> filter(month == 12)
 
 data_Nov |> summarise(on_time_rate = mean(on_time)) |> pull(on_time_rate)
-#> [1] 0.6426161
+#> [1] 0.8264803
 data_Dec |> summarise(on_time_rate = mean(on_time)) |> pull(on_time_rate)
-#> [1] 0.4672835
+#> [1] 0.6738712
 ```
 
 ### 3.2 Basics
@@ -132,7 +136,7 @@ airport of origin:
 ship$plot(origin)
 ```
 
-![](man/figures/README-plot_origin-1.png)<!-- -->
+<img src="man/figures/README-plot_origin-1.png" alt="" width="500" />
 
 New York City has three major airports, and Newark Liberty International
 Airport (EWR) accounted for the largest share of the decline in the
@@ -160,9 +164,9 @@ ship$table(origin)
 #> # A tibble: 3 × 8
 #>   origin contrib    n1    n2    x1    x2 rate1 rate2
 #>   <chr>    <dbl> <int> <int> <int> <int> <dbl> <dbl>
-#> 1 EWR    -0.0831  9603  9410  6251  3901 0.651 0.415
-#> 2 JFK    -0.0565  8645  8923  5702  4332 0.660 0.485
-#> 3 LGA    -0.0358  8723  8687  5379  4393 0.617 0.506
+#> 1 EWR    -0.0719  9603  9410  7995  5910 0.833 0.628
+#> 2 JFK    -0.0502  8645  8923  7290  6142 0.843 0.688
+#> 3 LGA    -0.0305  8723  8687  7006  6156 0.803 0.709
 ```
 
 ### 3.3 Flipping the Plot
@@ -174,7 +178,7 @@ In such cases, you can swap the x- and y-axes for better visualization.
 ship$plot_flip(carrier)
 ```
 
-![](man/figures/README-plot_carrier-1.png)<!-- -->
+<img src="man/figures/README-plot_carrier-1.png" alt="" width="500" />
 
 When the number of subgroups is large, those with small contributions
 are automatically grouped together. By default, this happens when there
@@ -182,10 +186,10 @@ are more than 10 subgroups, but the threshold can be adjusted with the
 `n` argument.
 
 ``` r
-ship$plot_flip(carrier, n = 5)
+ship$plot_flip(carrier, n = 6)
 ```
 
-![](man/figures/README-prot_carrier_n-1.png)<!-- -->
+<img src="man/figures/README-prot_carrier_n-1.png" alt="" width="500" />
 
 From this plot, JetBlue Airways and United Air Lines appear to have the
 largest contributions to the decline in on-time arrival rate.
@@ -200,7 +204,7 @@ example, we can create a Theseus plot for departure delays.
 ship$plot_flip(dep_delay)
 ```
 
-![](man/figures/README-plot_dep_delay-1.png)<!-- -->
+<img src="man/figures/README-plot_dep_delay-1.png" alt="" width="500" />
 
 By default, continuous variables are discretized so that each subgroup
 has roughly equal sample sizes, with the number of bins set to 10. You
@@ -208,11 +212,53 @@ can modify these settings by passing the return value of
 `continuous_config()` to the `continuous` argument.
 
 ``` r
-ship$plot_flip(dep_delay, continuous = continuous_config(n = 5))
+ship$plot_flip(dep_delay, continuous = continuous_config(n = 3))
 ```
 
-![](man/figures/README-plot_dep_delay_n-1.png)<!-- -->
+<img src="man/figures/README-plot_dep_delay_n-1.png" alt="" width="500" />
 
 This result shows that both a decrease in on-time departures and an
 increase in delayed departures contributed to the decline in on-time
 arrival rate.
+
+### 3.5 Ordering for Factor Columns
+
+If a subgroup column is a factor, `table()` and `plot()` respect its
+factor level order. This is useful when you want to keep a meaningful
+predefined order, such as `"Low"`, `"Medium"`, and `"High"`, instead of
+ordering categories by their contributions.
+
+``` r
+segment_order <- c("Low", "Medium", "High")
+
+data1 <- data.frame(
+  segment = factor(c("Low", "Low", "Medium", "Medium", "High", "High"), levels = segment_order),
+  y = c(1, 1, 1, 0, 1, 1)
+)
+
+data2 <- data.frame(
+  segment = factor(c("Low", "Low", "Medium", "Medium", "High", "High"), levels = segment_order),
+  y = c(1, 0, 1, 1, 0, 0)
+)
+
+ship <- create_ship(data1, data2, y = y, labels = c("Group 1", "Group 2"))
+
+ship$table(segment)
+#> # A tibble: 3 × 8
+#>   segment contrib    n1    n2    x1    x2 rate1 rate2
+#>   <fct>     <dbl> <int> <int> <dbl> <dbl> <dbl> <dbl>
+#> 1 Low      -0.167     2     2     2     1   1     0.5
+#> 2 Medium    0.167     2     2     1     2   0.5   1  
+#> 3 High     -0.333     2     2     2     0   1     0
+
+ship$plot(segment)
+```
+
+<img src="man/figures/README-factor_column-1.png" alt="" width="500" />
+
+Even if the contribution of `"High"` is larger than that of `"Low"` or
+`"Medium"`, the rows and bars are shown in the order
+`"Low" -> "Medium" -> "High"` because `segment` is a factor.
+
+By contrast, if `segment` were a character column, the output would be
+ordered by contribution rather than by a predefined level order.
