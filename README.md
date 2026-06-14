@@ -12,15 +12,16 @@
 
 ## 1. Overview
 
-In data analysis, when a metric differs between two groups, we sometimes
+In data analysis, when a metric differs between two groups, we often
 want to investigate whether a particular subgroup is driving that
-difference. For example, when a key metric decline is detected compared
-to the previous year, you may want to conduct a more detailed analysis.
-In this analysis, you may focus on gender among the attributes and
-examine whether the decline occurred among male, female, or both.
-However, this type of analysis is challenging when the metric is a rate,
-because the magnitude of each subgroup’s contribution to the rate cannot
-be simply calculated, unlike in the case of volume metrics.
+difference. For example, when you observe a decline in a key metric
+compared with the previous year, you may want to conduct a more detailed
+analysis. In such an analysis, you might focus on one attribute, such as
+gender, and examine whether the decline was driven by male users, female
+users, or both. However, this type of analysis is challenging when the
+metric is a rate, because each subgroup’s contribution to the rate
+difference cannot be simply calculated, unlike in the case of volume
+metrics.
 
 To address this issue, we propose an approach inspired by the story of
 the *[Ship of Theseus](https://en.wikipedia.org/wiki/Ship_of_Theseus)*.
@@ -29,25 +30,25 @@ with those of another, recalculating the metric at each step. The change
 in the metric at each step can then be interpreted as the contribution
 of each subgroup to the overall difference.
 
-For instance, suppose the metric was 6.2% in 2024 and decreased to 5.2%
-in 2025. Again, we focus on gender. We replace the male data within the
-2024 dataset with the male data from 2025 and recalculate the metric. As
-a result, the metric would drop by 0.8 percentage points, reaching 5.4%.
-In this case, the contribution of the male group to the change in the
-metric is -0.8 percentage points. Next, we replace the female data from
-2024 with that from 2025. The dataset then consists entirely of 2025
-data, and the metric drops by 0.2 percentage points, reaching 5.2%.
-Thus, the contribution of the female group is -0.2 percentage points.
+For instance, suppose the click-through rate (CTR) was 6.2% in 2024 and
+decreased to 5.2% in 2025. Again, we focus on gender. We replace the
+male users in the 2024 dataset with the male users from 2025 and
+recalculate the CTR. As a result, the CTR would drop by 0.8 percentage
+points, reaching 5.4%. In this case, the contribution of male users to
+the change in CTR is -0.8 percentage points. Next, we replace the female
+users from 2024 with those from 2025. The dataset then consists entirely
+of 2025 data, and CTR drops by 0.2 percentage points, reaching 5.2%.
+Thus, the contribution of female users is -0.2 percentage points.
 
 When visualized, the results appear as follows:
 
 <img src="man/figures/README-overview-1.png" alt="" width="500" />
 
-From this plot, we can see that the decline in the metric is primarily
-driven by the male group. We call this visualization the “Theseus Plot.”
+From this plot, we can see that the decline in CTR is primarily driven
+by male users. We call this visualization the “Theseus Plot.”
 
 The **TheseusPlot** package is designed to make it easy to generate
-Theseus Plots for various attributes.
+Theseus Plots for any column that defines subgroups.
 
 ## 2. Installation
 
@@ -69,7 +70,7 @@ remotes::install_github("hoxo-m/TheseusPlot")
 
 ### 3.1 Prepare Data
 
-To create Theseus plots, you need two data frames that share common
+To create Theseus Plots, you need two data frames that share common
 columns.
 
 We use the 2013 New York City flight data from
@@ -77,12 +78,12 @@ We use the 2013 New York City flight data from
 demo dataset. Here, we will define the rate metric as the proportion of
 flights that arrived on time. In December 2013, the on-time arrival rate
 dropped substantially compared to November. We investigate the cause
-using a Theseus plot.
+using a Theseus Plot.
 
 First, we create an `on_time` column in the data frame to indicate
 whether each flight arrived on time. Next, we extract the flights for
 November and December into separate data frames to form two comparison
-groups. The on-time arrival rate was 64% in November and dropped to 47%
+groups. The on-time arrival rate was 83% in November and dropped to 67%
 in December.
 
 ``` r
@@ -120,7 +121,7 @@ data_Dec |> summarise(on_time_rate = mean(on_time)) |> pull(on_time_rate)
 
 Using the two prepared data frames, we first create a `ship` object. The
 `ship` object is an instance of the R6 class `ShipOfTheseus`, designed
-to create Theseus plots.
+to create Theseus Plots.
 
 ``` r
 library(TheseusPlot)
@@ -128,8 +129,8 @@ library(TheseusPlot)
 ship <- create_ship(data_Nov, data_Dec, y = on_time, labels = c("November", "December"))
 ```
 
-You can create a Theseus plot by passing column names to the `plot`
-method of a `ship` object. For example, to create a Theseus plot for the
+You can create a Theseus Plot by passing column names to the `plot`
+method of a `ship` object. For example, to create a Theseus Plot for the
 airport of origin:
 
 ``` r
@@ -144,12 +145,12 @@ on-time arrival rate.
 
 Note that the number of flights at each airport matters, as a larger
 flight volume is expected to have a greater impact. To make this clear,
-the Theseus plot displays the data size for each group within each
+the Theseus Plot displays the sample size for each group within each
 subgroup as a bar chart. From this, we see that the number of flights is
 similar across airports, allowing for direct comparison of
 contributions.
 
-In summary, a Theseus plot consists of two components:
+In summary, a Theseus Plot consists of two components:
 
 - A waterfall plot showing how much each subgroup contributed to the
   change in the metric.
@@ -157,7 +158,7 @@ In summary, a Theseus plot consists of two components:
   subgroup.
 
 A `ship` object also provides the `table` method to inspect the exact
-values used in the Theseus plot.
+values used in the Theseus Plot.
 
 ``` r
 ship$table(origin)
@@ -171,7 +172,7 @@ ship$table(origin)
 
 ### 3.3 Flipping the Plot
 
-When there are many subgroups, a Theseus plot can become hard to read.
+When there are many subgroups, a Theseus Plot can become hard to read.
 In such cases, you can swap the x- and y-axes for better visualization.
 
 ``` r
@@ -189,16 +190,16 @@ are more than 10 subgroups, but the threshold can be adjusted with the
 ship$plot_flip(carrier, n = 6)
 ```
 
-<img src="man/figures/README-prot_carrier_n-1.png" alt="" width="500" />
+<img src="man/figures/README-plot_carrier_n-1.png" alt="" width="500" />
 
 From this plot, JetBlue Airways and United Air Lines appear to have the
 largest contributions to the decline in on-time arrival rate.
 
 ### 3.4 Automatic Discretization of Continuous Values
 
-Theseus plots do not directly support continuous variables. If a
+Theseus Plots are primarily designed for categorical variables. When a
 continuous column is provided, it is automatically discretized. For
-example, we can create a Theseus plot for departure delays.
+example, we can create a Theseus Plot for departure delays.
 
 ``` r
 ship$plot_flip(dep_delay)
@@ -221,44 +222,57 @@ This result shows that both a decrease in on-time departures and an
 increase in delayed departures contributed to the decline in on-time
 arrival rate.
 
-### 3.5 Ordering for Factor Columns
+### 3.5 Controlling Category Order with Factors
 
-If a subgroup column is a factor, `table()` and `plot()` respect its
-factor level order. This is useful when you want to keep a meaningful
-predefined order, such as `"Low"`, `"Medium"`, and `"High"`, instead of
-ordering categories by their contributions.
+By default, character columns are ordered by contribution size in
+`table()`, `plot()`, and `plot_flip()`. If you want to use a specific
+order instead, convert the column to a factor. For factor columns,
+TheseusPlot respects the order of the factor levels.
+
+This is useful when the categories have a natural order, such as
+`"Low"`, `"Medium"`, and `"High"`, or when you want to define the order
+manually.
+
+For example, suppose we classify departure delays into three categories:
+`"Early"`, `"On-time"`, and `"Delayed"`.
+
+When `departure_type` is a character column, the categories are ordered
+by their contributions.
 
 ``` r
-segment_order <- c("Low", "Medium", "High")
+to_departure_type <- function(x) {
+  case_when(x <= -4 ~ "Early", x <= 4 ~ "On-time", x > 4 ~ "Delayed")
+}
 
-data1 <- data.frame(
-  segment = factor(c("Low", "Low", "Medium", "Medium", "High", "High"), levels = segment_order),
-  y = c(1, 1, 1, 0, 1, 1)
-)
+data_Nov <- data_Nov |> mutate(departure_type = to_departure_type(dep_delay))
+data_Dec <- data_Dec |> mutate(departure_type = to_departure_type(dep_delay))
 
-data2 <- data.frame(
-  segment = factor(c("Low", "Low", "Medium", "Medium", "High", "High"), levels = segment_order),
-  y = c(1, 0, 1, 1, 0, 0)
-)
+ship <- create_ship(data_Nov, data_Dec, y = on_time, labels = c("November", "December"))
 
-ship <- create_ship(data1, data2, y = y, labels = c("Group 1", "Group 2"))
+ship$plot_flip(departure_type)
+```
 
-ship$table(segment)
-#> # A tibble: 3 × 8
-#>   segment contrib    n1    n2    x1    x2 rate1 rate2
-#>   <fct>     <dbl> <int> <int> <dbl> <dbl> <dbl> <dbl>
-#> 1 Low      -0.167     2     2     2     1   1     0.5
-#> 2 Medium    0.167     2     2     1     2   0.5   1  
-#> 3 High     -0.333     2     2     2     0   1     0
+<img src="man/figures/README-no_factor_column-1.png" alt="" width="500" />
 
-ship$plot(segment)
+To display the categories in a meaningful order, convert
+`departure_type` to a factor and specify the level order.
+
+``` r
+to_departure_type <- function(x) {
+  types <- case_when(x <= -4 ~ "Early", x <= 4 ~ "On-time", x > 4 ~ "Delayed")
+  types <- factor(types, levels = c("Early", "On-time", "Delayed"))
+  types
+}
+
+data_Nov <- data_Nov |> mutate(departure_type = to_departure_type(dep_delay))
+data_Dec <- data_Dec |> mutate(departure_type = to_departure_type(dep_delay))
+
+ship <- create_ship(data_Nov, data_Dec, y = on_time, labels = c("November", "December"))
+
+ship$plot_flip(departure_type)
 ```
 
 <img src="man/figures/README-factor_column-1.png" alt="" width="500" />
 
-Even if the contribution of `"High"` is larger than that of `"Low"` or
-`"Medium"`, the rows and bars are shown in the order
-`"Low" -> "Medium" -> "High"` because `segment` is a factor.
-
-By contrast, if `segment` were a character column, the output would be
-ordered by contribution rather than by a predefined level order.
+You can change the factor levels to display the categories in any order
+you choose.

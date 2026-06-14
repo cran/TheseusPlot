@@ -1,7 +1,7 @@
 Type: Package
 Package: TheseusPlot
 Title: Visualizing Decomposition of Differences in Rate Metrics
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person("Koji", "Makiyama", , "hoxo.smile@gmail.com", role = c("aut", "cre", "cph")),
     person("Kazuyuki", "Sano", role = c("ctb", "wdc")),
@@ -24,13 +24,13 @@ URL: https://github.com/hoxo-m/TheseusPlot,
 BugReports: https://github.com/hoxo-m/TheseusPlot/issues
 Depends: R (>= 4.1.0)
 Imports: dplyr, forcats, ggplot2, memoise, R6, rlang, stats, stringr,
-        tibble, tidyr, waterfalls
+        tibble, tidyr, waterfalls (>= 1.1.4)
 Suggests: knitr, nycflights13, rmarkdown, testthat (>= 3.0.0)
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-04-09 17:26:02 UTC; akagi
+Packaged: 2026-06-14 22:05:48 UTC; akagi
 Author: Koji Makiyama [aut, cre, cph],
   Kazuyuki Sano [ctb, wdc],
   Shinichi Takayanagi [med],
@@ -38,4 +38,4 @@ Author: Koji Makiyama [aut, cre, cph],
   LY Corporation Analytics Solution Enhancement Team [spn]
 Maintainer: Koji Makiyama <hoxo.smile@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-04-09 17:40:02 UTC
+Date/Publication: 2026-06-14 23:40:13 UTC
